@@ -19,7 +19,6 @@
             margin: 0;
             justify-content: center;
             align-items: center;
-
         }
 
         .container {
@@ -40,30 +39,32 @@
             align-items: left;
             box-shadow: none;
             border-radius: 0%;
-            max-width: 90%
+            max-width: 80%
         }
 
         .video-player {
             max-width: 95%;
-            max-height: 90vh;
             margin: auto;
             padding-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .plyr {
             border-radius: 5px;
+            --plyr-color-main: #0d6efd;
+            width: 100%;
+            max-height: 90vh;
         }
 
-        .plyr--full-ui input[type=range] {
-            color: #007bff;
-        }       
-
-        .plyr__control--overlaid {
-            background: #007bff;
+        .plyr--video.portrait-mode {
+            max-width: calc(90vh * 9/16);
         }
 
-        .plyr--video .plyr__control:hover {
-            background: #007bff;
+        .plyr--video.landscape-mode {
+            max-width: 100%;
+            aspect-ratio: 16/9;
         }
 
         ::-webkit-scrollbar {
@@ -79,7 +80,6 @@
         }
 
         @media (max-width: 992px) {
-
             .video-player {
                 max-width: 95%;
                 margin: auto;
@@ -113,7 +113,6 @@
                         Logout</button>
                 </form>
             </div>
-
         </div>
     </nav>
     <div class="video-player">
@@ -142,7 +141,7 @@
                     xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd"
                         d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z" />
-                </svg> by <a href="https://t.me/the_Addy" target="_blank">The Addy</a><br>
+                </svg> by <a href="https://github.com/weebzone" target="_blank">The Addy</a><br>
                 &copy; 2024 <a href="https://github.com/weebzone/Surf-TG" target="_blank">Surf-TG</a>. All Rights
                 Reserved.
         </div>
@@ -160,12 +159,52 @@
 
     const downloadlink = `${domainUrl}/${videoId}/${encodedName}?id=${idParam}&hash=${hashParam}`;
 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
     const player = new Plyr('#player', {
         controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen', 'pip', 'airplay', 'settings', "play-large", 'duration'],
         hideControls: false,
         keyboard: { focused: true, global: true },
         loop: { active: false },
+        ratio: '16:9',
+        fullscreen: {
+            enabled: true,
+            fallback: true,
+            iosNative: true
+        }
     });
+
+    player.on('loadedmetadata', () => {
+        const video = document.getElementById('player');
+        const videoElement = player.elements.container;
+        
+        const isPortrait = video.videoHeight > video.videoWidth;
+        
+        videoElement.classList.remove('portrait-mode', 'landscape-mode');
+        
+        if (isPortrait) {
+            videoElement.classList.add('portrait-mode');
+            player.ratio = '9:16';
+        } else {
+            videoElement.classList.add('landscape-mode');
+            player.ratio = '16:9';
+        }
+    });
+
+    if (isMobile) {
+        player.on('enterfullscreen', () => {
+            player.exit();
+            const video = document.getElementById('player');
+            if (video.requestFullscreen) {
+                video.requestFullscreen();
+            } else if (video.webkitRequestFullscreen) {
+                video.webkitRequestFullscreen();
+            } else if (video.msRequestFullscreen) {
+                video.msRequestFullscreen();
+            }
+        });
+    }
+
     function mx_player() {
         const openDownloadLink = downloadlink;
         const openMx = `intent:${openDownloadLink}#Intent;package=com.mxtech.videoplayer.ad;end`;
@@ -177,15 +216,18 @@
         const openVlc = `vlc://${openDownloadLink}`;
         window.location.href = openVlc;
     }
+
     function km_player() {
         const openDownloadLink = downloadlink;
         const openKmplayer = `intent:${openDownloadLink}#Intent;package=com.kmplayer;end`;
         window.location.href = openKmplayer;
     }
+
     function download() {
         const openDownloadLink = downloadlink;
         window.location.href = openDownloadLink;
     }
+
     function get_file() {
         const regex = /(\d+)\?id=(\d+)&/;
         const match = videolink.match(regex);
@@ -196,6 +238,7 @@
             window.location.href = openTG;
         }
     }
+
     function copyUrl() {
         const url = downloadlink;
         navigator.clipboard.writeText(url)
@@ -206,11 +249,13 @@
                 console.error('Failed to copy URL: ', error);
             });
     }
+
     function updateVideoSource() {
         const videoElement = document.getElementById('player');
         const newSrc = downloadlink;
         videoElement.src = newSrc;
     }
+
     window.onload = function () {
         updateVideoSource();
     };
