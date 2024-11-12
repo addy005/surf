@@ -59,7 +59,8 @@
         }
 
         .plyr--video.portrait-mode {
-            max-width: calc(90vh * 9/16);
+            max-width: 100%;
+            aspect-ratio: 9/16;
         }
 
         .plyr--video.landscape-mode {
@@ -77,6 +78,13 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
+        }
+
+        @media (min-width: 992px) {
+            .plyr--video.portrait-mode {
+                max-width: 100%;
+                aspect-ratio: 16/9;
+            }
         }
 
         @media (max-width: 992px) {
@@ -185,7 +193,13 @@
         
         if (isPortrait) {
             videoElement.classList.add('portrait-mode');
-            player.ratio = '9:16';
+            
+            // Set aspect ratio to 9:16 for mobile, 16:9 for desktop
+            if (isMobile) {
+                player.ratio = '9:16';
+            } else {
+                player.ratio = '16:9';
+            }
         } else {
             videoElement.classList.add('landscape-mode');
             player.ratio = '16:9';
